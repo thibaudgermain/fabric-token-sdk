@@ -227,15 +227,14 @@ func (cc *TokenChaincode) ProcessRequest(args [][]byte, tArgs map[string][]byte,
 	if !ok {
 		return shim.Error("failed getting token request, entry not found")
 	}
-	// logger.Warnf("tokenRequest: [%#v]", tokenRequest)
-
+	
 	validator, err := cc.GetValidator(Params)
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
 	// Verify
-	validator.VerifySideBizContext(
+	err = validator.VerifySideBizContext(
 		context.Background(),
 		stub,
 		stub.GetTxID(),
@@ -243,6 +242,10 @@ func (cc *TokenChaincode) ProcessRequest(args [][]byte, tArgs map[string][]byte,
 		args,
 		tArgs,
 	)
+	if err != nil {
+		logger.Errorf("unable run VerifySideBizContext %s", err.Error())
+		return shim.Error(err.Error())
+	}
 
 	actions, attributes, err := validator.UnmarshallAndVerifyWithMetadata(
 		context.Background(),
